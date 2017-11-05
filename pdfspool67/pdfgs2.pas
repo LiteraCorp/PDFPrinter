@@ -1,10 +1,10 @@
-{===============================================================================
+{ ===============================================================================
   Litera(r) PDF
   Copyright (c) Feb 2004 - 2017 by Litera Corp. All rights reserved.
 
   Description:
   GhostScript Interface
-===============================================================================}
+  =============================================================================== }
 unit pdfGs2;
 
 interface
@@ -15,11 +15,14 @@ function CallGS(argv1: TStringList): Boolean;
 procedure InitGSDLL;
 procedure ConvertGSPDFA(s1, s2: string; bPDF1A: Boolean);
 
-procedure ConvertGSPDF(s1, s2: string; bOpenPDFA: boolean = false);
+procedure ConvertGSPDF(s1, s2: string; bOpenPDFA: Boolean = false);
 function GetFontsDirectoryX: string;
 function gslib: string;
 
-var iGSDLLHandle: NativeInt; bGsDebug: Boolean = false; iGsType: Integer = 0;
+var
+  iGSDLLHandle: NativeInt;
+  bGsDebug: Boolean = false;
+  iGsType: Integer = 0;
 
 implementation
 
@@ -34,28 +37,27 @@ type
   end;
 
   PGSAPIrevision = ^TGSAPIrevision;
-  TStdioFunction = function(caller_handle: Pointer; buf: PansiChar;
-    len: NativeInt): NativeInt; stdcall;
+  TStdioFunction = function(caller_handle: Pointer; buf: PansiChar; len: NativeInt): NativeInt; stdcall;
 
   PPCharA = array of PansiChar;
 
-var instance: Pointer;
-  gsapi_revision: function(pGSRevisionInfo: PGSAPIrevision; len: NativeInt)
-    : NativeInt; stdcall;
-  gsapi_new_instance: function(pinstance: Pointer; lngCallerHandle: Pointer)
-    : DWORD; stdcall;
-  gsapi_set_stdio: function(pinstance: Pointer; stdin_fn: TStdioFunction;
-    stdout_fn: TStdioFunction; stderr_fn: TStdioFunction): DWORD; stdcall;
+var
+  instance: Pointer;
+  gsapi_revision: function(pGSRevisionInfo: PGSAPIrevision; len: NativeInt): NativeInt; stdcall;
+  gsapi_new_instance: function(pinstance: Pointer; lngCallerHandle: Pointer): NativeInt; stdcall;
+  gsapi_set_stdio: function(pinstance: Pointer; stdin_fn: TStdioFunction; stdout_fn: TStdioFunction;
+    stderr_fn: TStdioFunction): DWORD; stdcall;
   gsapi_delete_instance: procedure(pinstance: Pointer); stdcall;
-  gsapi_init_with_args: function(pinstance: Pointer; argc: NativeInt;
-    argv: PPCharA): DWORD; stdcall;
+  gsapi_init_with_args: function(pinstance: Pointer; argc: NativeInt; argv: PPCharA): DWORD; stdcall;
   gsapi_exit: function(pinstance: Pointer): DWORD; stdcall;
 
 function Is64Bits(): Boolean;
 type
-  TIsWow64Process = function(hProcess: THandle; var Wow64Process: BOOL)
-    : BOOL; stdcall;
-var IsWow64Proc: TIsWow64Process; hLib: THandle; bWow64: LongBool;
+  TIsWow64Process = function(hProcess: THandle; var Wow64Process: BOOL): BOOL; stdcall;
+var
+  IsWow64Proc: TIsWow64Process;
+  hLib: THandle;
+  bWow64: LongBool;
   hProcess: Cardinal;
 begin
   Result := false;
@@ -76,7 +78,8 @@ begin
 end;
 
 function gslib: string;
-var dir_gsLib: string;
+var
+  dir_gsLib: string;
 begin
   if Is64Bits then begin
     dir_gsLib := 'c:\program files (x86)\litera\changepro';
@@ -89,7 +92,8 @@ end;
 function GetFontsDirectoryX: string;
 
   function SetAddSlash(const sPath: string): string;
-  var sResult: string;
+  var
+    sResult: string;
   begin
     sResult := sPath;
     if (Length(sResult) > 0) then
@@ -105,7 +109,8 @@ function GetFontsDirectoryX: string;
 
   function ReadVar(XENV: PWideCHAR): string;
     procedure NullString(var sStr: string);
-    var iNo: integer;
+    var
+      iNo: Integer;
     begin
       iNo := Pos(#0, sStr);
       if iNo >= 1 then begin
@@ -113,11 +118,11 @@ function GetFontsDirectoryX: string;
       end;
     end;
 
-  var EnvString: string;
+  var
+    EnvString: string;
   begin
     SetLength(EnvString, 1024);
-    if (GetEnvironmentVariableW(XENV, PWideCHAR(EnvString), 1023) <> 0) then
-    begin
+    if (GetEnvironmentVariableW(XENV, PWideCHAR(EnvString), 1023) <> 0) then begin
       Result := Trim(EnvString);
     end else begin
       Result := '';
@@ -125,13 +130,14 @@ function GetFontsDirectoryX: string;
     NullString(Result);
   end;
 
-var reg: TRegistry; tstr: string; sDrive: string;
+var
+  reg: TRegistry;
+  tstr: string;
+  sDrive: string;
 begin
   reg := TRegistry.Create(KEY_READ or KEY_WRITE);
   reg.RootKey := HKEY_CURRENT_USER;
-  if (reg.OpenKey
-    ('Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders', True))
-  then begin
+  if (reg.OpenKey('Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders', True)) then begin
     tstr := reg.ReadString('Fonts');
   end;
   reg.CloseKey;
@@ -162,7 +168,8 @@ begin
 end;
 
 procedure ConvertGSPDFA(s1, s2: string; bPDF1A: Boolean);
-var sParams: TStringList;
+var
+  sParams: TStringList;
 begin
   sParams := TStringList.Create;
   sParams.Add('-I' + GetFontsDirectoryX);
@@ -202,8 +209,9 @@ begin
   Sleep(100);
 end;
 
-procedure ConvertGSPDF(s1, s2: string; bOpenPDFA: boolean = false);
-var sParams: TStringList;
+procedure ConvertGSPDF(s1, s2: string; bOpenPDFA: Boolean = false);
+var
+  sParams: TStringList;
 begin
   sParams := TStringList.Create;
   sParams.Add('-I' + GetFontsDirectoryX);
@@ -219,8 +227,7 @@ begin
 
   sParams.Add('-dNOOUTERSAVE');
 
-  if bOpenPDFA then
-  begin
+  if bOpenPDFA then begin
     sParams.Add('-dShowAcroForm=false');
     sParams.Add('-dShowAnnots=true');
   end;
@@ -247,16 +254,17 @@ begin
 end;
 
 procedure InitGSDLL;
-function GetModuleName: string;
-var
-  szFileName: array[0..MAX_PATH] of Char;
-begin
-  FillChar(szFileName, SizeOf(szFileName), #0);
-  GetModuleFileName(hInstance, szFileName, MAX_PATH);
-  Result := szFileName;
-end;
+  function GetModuleName: string;
+  var
+    szFileName: array [0 .. MAX_PATH] of Char;
+  begin
+    FillChar(szFileName, SizeOf(szFileName), #0);
+    GetModuleFileName(hInstance, szFileName, MAX_PATH);
+    Result := szFileName;
+  end;
 
-var sPath, sSysPath: string;
+var
+  sPath, sSysPath: string;
 begin
 {$IFDEF WIN64}
   sPath := 'gsdll64.dll'; // expected to be in Path
@@ -265,29 +273,27 @@ begin
 {$ENDIF}
   iGSDLLHandle := LoadLibrary(PChar(sPath));
   if iGSDLLHandle >= 32 then begin
-    @gsapi_revision := GetProcAddress(iGSDLLHandle, 'gsapi_revision'); 
-    @gsapi_new_instance := GetProcAddress(iGSDLLHandle,
-      'gsapi_new_instance'); { U }
-    @gsapi_set_stdio := GetProcAddress(iGSDLLHandle, 'gsapi_set_stdio'); 
-    @gsapi_delete_instance := GetProcAddress(iGSDLLHandle,
-      'gsapi_delete_instance'); { U }
-    @gsapi_init_with_args := GetProcAddress(iGSDLLHandle,
-      'gsapi_init_with_args'); { U }
+    @gsapi_revision := GetProcAddress(iGSDLLHandle, 'gsapi_revision');
+    @gsapi_new_instance := GetProcAddress(iGSDLLHandle, 'gsapi_new_instance'); { U }
+    @gsapi_set_stdio := GetProcAddress(iGSDLLHandle, 'gsapi_set_stdio');
+    @gsapi_delete_instance := GetProcAddress(iGSDLLHandle, 'gsapi_delete_instance'); { U }
+    @gsapi_init_with_args := GetProcAddress(iGSDLLHandle, 'gsapi_init_with_args'); { U }
     @gsapi_exit := GetProcAddress(iGSDLLHandle, 'gsapi_exit'); { U }
   end;
   exit;
 end;
 
-function gsdll_stdin(intGSInstanceHandle: DWORD; strz: DWORD;
-  intBytes: DWORD): DWORD;
+function gsdll_stdin(intGSInstanceHandle: DWORD; strz: DWORD; intBytes: DWORD): DWORD;
 begin
   // We don't have a console, so just return EOF
   Result := 0;
 end;
 
-function gsdll_stdout(intGSInstanceHandle: DWORD; strz: DWORD;
-  intBytes: DWORD): DWORD;
-var aByte: array of Byte; tstr: string; i: Integer;
+function gsdll_stdout(intGSInstanceHandle: DWORD; strz: DWORD; intBytes: DWORD): DWORD;
+var
+  aByte: array of Byte;
+  tstr: string;
+  i: Integer;
 begin
   SetLength(aByte, intBytes);
   for i := 0 to intBytes - 1 do begin
@@ -296,14 +302,15 @@ begin
   Result := intBytes;
 end;
 
-function gsdll_stderr(intGSInstanceHandle: DWORD; strz: DWORD;
-  intBytes: DWORD): DWORD;
+function gsdll_stderr(intGSInstanceHandle: DWORD; strz: DWORD; intBytes: DWORD): DWORD;
 begin
   Result := gsdll_stdout(intGSInstanceHandle, strz, intBytes);
 end;
 
 function CheckRevision(intRevision: NativeInt): Boolean;
-var intReturn: NativeInt; udtGSRevInfo: PGSAPIrevision;
+var
+  intReturn: NativeInt;
+  udtGSRevInfo: PGSAPIrevision;
 begin
   New(udtGSRevInfo);
   intReturn := gsapi_revision(udtGSRevInfo, 16);
@@ -320,11 +327,14 @@ end;
 type
   TgsStdioEvent = procedure(Value: PansiChar; len: NativeInt) of object;
 
-var FInput: TgsStdioEvent; FOutput: TgsStdioEvent; FError: TgsStdioEvent;
+var
+  FInput: TgsStdioEvent;
+  FOutput: TgsStdioEvent;
+  FError: TgsStdioEvent;
 
-function gsstdin(caller_handle: Pointer; buf: PansiChar; len: NativeInt)
-  : NativeInt; stdcall;
-var S: ansiString;
+function gsstdin(caller_handle: Pointer; buf: PansiChar; len: NativeInt): NativeInt; stdcall;
+var
+  S: ansiString;
 begin
   S := buf;
   if Assigned(FInput) then FInput(PansiChar(S), len);
@@ -339,9 +349,9 @@ begin
   Result := Length(buf);
 end;
 
-function gsstdout(caller_handle: Pointer; buf: PansiChar; len: NativeInt)
-  : NativeInt; stdcall;
-var S: ansiString;
+function gsstdout(caller_handle: Pointer; buf: PansiChar; len: NativeInt): NativeInt; stdcall;
+var
+  S: ansiString;
 begin
   S := buf;
   SetLength(S, len);
@@ -354,9 +364,9 @@ begin
   Result := len; // length(S);
 end;
 
-function gsstderr(caller_handle: Pointer; buf: PansiChar; len: NativeInt)
-  : NativeInt; stdcall;
-var S: ansiString;
+function gsstderr(caller_handle: Pointer; buf: PansiChar; len: NativeInt): NativeInt; stdcall;
+var
+  S: ansiString;
 begin
   S := buf;
   SetLength(S, len);
@@ -370,16 +380,19 @@ begin
 end;
 
 function CallGS(argv1: TStringList): Boolean;
-var iReturn: NativeInt; iArg: NativeInt; sArg: PPCharA; iTSNo, iTSCount: NativeInt;
+var
+  iReturn: NativeInt;
+  iArg: NativeInt;
+  sArg: PPCharA;
+  iTSNo, iTSCount: NativeInt;
 begin
 
   if bGsDebug then begin
     ShowMessage(argv1.text);
   end;
 
-  if (CheckRevision(920) = false) then
-    ShowMessage
-      ('PDF Error. Please make sure gsdll32.dll / gsdll64.dll is correct version. ');
+  if (CheckRevision(920) = false) then begin
+    ShowMessage('PDF Error. Please make sure gsdll32.dll / gsdll64.dll is correct version. ');
     Result := false;
     exit;
   end;
@@ -399,17 +412,15 @@ begin
     iTSCount := argv1.Count;
     iArg := iTSCount;
     SetLength(sArg, iTSCount);
-    sArg[0] := PansiChar(ansiString(' ')); 
-	for iTSNo := 1 to (iTSCount - 1) do begin
-      sArg[iTSNo] :=
-        StrNew(PansiChar(ansiString(UTF8Encode(argv1.Strings[iTSNo]))));
+    sArg[0] := PansiChar(ansiString(' '));
+    for iTSNo := 1 to (iTSCount - 1) do begin
+      sArg[iTSNo] := StrNew(PansiChar(ansiString(UTF8Encode(argv1.Strings[iTSNo]))));
     end;
     try
       iReturn := gsapi_init_with_args(instance, iArg, sArg);
       if iReturn <> 0 then begin
         if bGsDebug then begin
-          ShowMessage('PDF Error. Please try to print again. Error Code: ' +
-            IntToStr(iReturn));
+          ShowMessage('PDF Error. Please try to print again. Error Code: ' + IntToStr(iReturn));
         end;
       end;
       gsapi_exit(instance);
